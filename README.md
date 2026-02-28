@@ -1,36 +1,272 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 Temp Mail App
 
-## Getting Started
+Aplicación web de correos temporales construida con **Next.js (App Router)** que genera emails desechables usando la API de Boomlify y muestra los mensajes en tiempo real con una interfaz moderna y minimalista.
 
-First, run the development server:
+---
+
+## 🧠 Descripción
+
+Este proyecto permite:
+
+* ✉️ Generar emails temporales
+* 📥 Leer mensajes del buzón
+* 🔄 Auto-renovación del correo cada 10 minutos
+* ⚡ Polling automático del inbox
+* 🛡️ Normalización segura de respuestas API
+* 🎨 UI moderna, responsive y minimalista
+* 🧱 Arquitectura fullstack con Route Handlers
+
+---
+
+## 🛠️ Tecnologías utilizadas
+
+* Next.js (App Router)
+* React
+* TypeScript
+* Tailwind CSS
+* Lucide React (iconos)
+* ESLint
+* Node.js
+
+---
+
+## 📦 Instalación del proyecto
+
+### 1. Crear el proyecto
+
+```bash
+npx create-next-app@latest temp-mail-app
+cd temp-mail-app
+```
+
+### 2. Instalar dependencias
+
+```bash
+npm install
+npm install lucide-react
+```
+
+### 3. Ejecutar en desarrollo
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abrir en el navegador:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🔐 Variables de entorno
 
-To learn more about Next.js, take a look at the following resources:
+Crear en la raíz del proyecto:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+.env.local
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Ejemplo:
 
-## Deploy on Vercel
+```env
+BOOMLIFY_API_KEY=tu_api_key
+BOOMLIFY_BASE_URL=https://api.boomlify.com
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### ⚠️ Seguridad
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+El archivo `.env.local` **no se sube a Git** gracias al `.gitignore`.
+
+---
+
+## 🏗️ Estructura del proyecto
+
+```
+src/
+│
+├── app/
+│   ├── api/
+│   │   └── mail/
+│   │       ├── route.ts                # listar + crear
+│   │       ├── [id]/
+│   │       │   ├── route.ts            # detalle + eliminar
+│   │       │   └── messages/
+│   │       │       └── route.ts        # inbox
+│   │
+│   ├── (site)/
+│   │   ├── page.tsx                    # UI principal
+│   │   └── layout.tsx
+│   │
+│   └── globals.css
+│
+├── services/
+│   └── boomlify.service.ts             # cliente Boomlify
+│
+├── hooks/
+│   └── useTempMail.ts                  # lógica del correo
+│
+├── types/
+│   └── mail.types.ts                   # tipos TS
+│
+└── lib/
+```
+
+---
+
+## 🔌 Endpoints implementados
+
+### Backend (Route Handlers)
+
+| Método | Ruta                      | Descripción      |
+| ------ | ------------------------- | ---------------- |
+| POST   | `/api/mail`               | Crear email      |
+| GET    | `/api/mail`               | Listar emails    |
+| GET    | `/api/mail/[id]`          | Detalle email    |
+| DELETE | `/api/mail/[id]`          | Eliminar email   |
+| GET    | `/api/mail/[id]/messages` | Obtener mensajes |
+
+---
+
+## 🔄 Flujo de la aplicación
+
+1. UI llama `POST /api/mail`
+2. Route Handler llama a Boomlify
+3. Se crea email temporal
+4. `useTempMail` guarda `email` y `emailId`
+5. Frontend hace polling a:
+
+```
+/api/mail/{id}/messages
+```
+
+6. La bandeja se actualiza automáticamente
+
+---
+
+## 🧩 Hook principal
+
+El hook `useTempMail`:
+
+* crea el email
+* guarda `emailId`
+* refresca cada 10 minutos
+
+Expone:
+
+```ts
+{
+  email,
+  emailId,
+  loading,
+  refresh
+}
+```
+
+---
+
+## 🛡️ Manejo de errores implementado
+
+### ✅ params como Promise (Next.js 15)
+
+```ts
+const { id } = await params;
+```
+
+---
+
+### ✅ Normalización de mensajes
+
+La API puede devolver:
+
+* array directo
+* `{ messages: [] }`
+* `{ data: [] }`
+
+Por eso se normaliza:
+
+```ts
+const messages = Array.isArray(data)
+  ? data
+  : data.messages ?? data.data ?? [];
+```
+
+---
+
+### ✅ Protección en frontend
+
+```ts
+if (!res.ok) {
+  setMessages([]);
+  return;
+}
+```
+
+Evita:
+
+* ❌ `messages.map is not a function`
+* ❌ crash cuando expira el email
+
+---
+
+## 🎨 Características de UI
+
+* ✨ Diseño minimalista
+* 🌙 Soporte dark mode
+* 📱 Responsive
+* 🔄 Animaciones suaves
+* 📋 Copiar email al portapapeles
+* 📥 Inbox auto-refresh cada 8s
+* ⏳ Loader states elegantes
+
+---
+
+## 🚀 Scripts disponibles
+
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+```
+
+---
+
+## 🔮 Próximas mejoras
+
+* ⏱️ Contador visual de expiración
+* 🔔 Notificación cuando llega correo
+* ⚡ Polling inteligente adaptativo
+* 🧠 Cache inteligente
+* 🛡️ Rate limiting
+* 🚀 Deploy en Vercel
+* 📡 WebSockets (modo realtime)
+
+---
+
+## 🧪 Notas de desarrollo
+
+### ⏳ Expiración de emails
+
+Los correos de Boomlify pueden expirar.
+El sistema maneja esto limpiando automáticamente la bandeja.
+
+---
+
+### 🔁 Polling actual
+
+* Email: cada **10 minutos**
+* Inbox: cada **8 segundos**
+
+Puedes ajustar en:
+
+```ts
+setInterval(fetchMessages, 8000);
+```
+
+---
+
+## 📄 Licencia
+
+MIT
