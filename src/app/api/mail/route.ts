@@ -1,11 +1,11 @@
-import { NextResponse, NextRequest  } from "next/server";
+import { NextResponse } from "next/server";
 import {
   createTempEmail,
   listEmails,
 } from "@/services/boomlify.service";
 
 // LISTAR emails
-export async function GET(_req: NextRequest) {
+export async function GET() {
   try {
     const data = await listEmails();
     return NextResponse.json(data);
@@ -19,7 +19,7 @@ export async function GET(_req: NextRequest) {
 }
 
 // CREAR email
-export async function POST(_req: NextRequest) {
+export async function POST() {
   try {
     const data = await createTempEmail();
 
