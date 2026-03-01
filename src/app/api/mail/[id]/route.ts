@@ -14,7 +14,6 @@ export async function GET(
 
     const data = await getEmailDetail(id);
 
-    // normalizar por si Boomlify envuelve la respuesta
     const email = data?.email ?? data?.data ?? data ?? null;
 
     return NextResponse.json(email);
