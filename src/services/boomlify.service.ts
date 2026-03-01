@@ -1,14 +1,29 @@
-const BASE_URL = process.env.BOOMLIFY_BASE_URL!;
-const API_KEY = process.env.BOOMLIFY_API_KEY!;
+// NO validar env vars en el top-level
 
-if (!BASE_URL) throw new Error("Missing BOOMLIFY_BASE_URL");
-if (!API_KEY) throw new Error("Missing BOOMLIFY_API_KEY");
+function getEnv() {
+  const BASE_URL = process.env.BOOMLIFY_BASE_URL;
+  const API_KEY = process.env.BOOMLIFY_API_KEY;
 
+  if (!BASE_URL) {
+    throw new Error("Missing BOOMLIFY_BASE_URL");
+  }
+
+  if (!API_KEY) {
+    throw new Error("Missing BOOMLIFY_API_KEY");
+  }
+
+  return { BASE_URL, API_KEY };
+}
+
+// ================================
 // cliente centralizado (LA CLAVE)
+// ================================
 async function boomlifyFetch(
   path: string,
   options: RequestInit = {}
 ) {
+  const { BASE_URL, API_KEY } = getEnv(); // runtime, no build time
+
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers: {
@@ -54,5 +69,3 @@ export const deleteEmail = (emailId: string) =>
   boomlifyFetch(`/api/v1/emails/${emailId}`, {
     method: "DELETE",
   });
-
-  
