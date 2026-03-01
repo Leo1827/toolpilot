@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import {
   deleteEmail,
   getEmailDetail,
@@ -6,15 +6,16 @@ import {
 
 // detalle
 export async function GET(
-  _: Request,
-  { params }: { params: { id: string } }
+  _req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const data = await getEmailDetail(params.id);
+    const { id } = await context.params;
+
+    const data = await getEmailDetail(id);
 
     // normalizar por si Boomlify envuelve la respuesta
-    const email =
-      data.email ?? data.data ?? data ?? null;
+    const email = data?.email ?? data?.data ?? data ?? null;
 
     return NextResponse.json(email);
   } catch (error) {
@@ -28,11 +29,13 @@ export async function GET(
 
 // eliminar
 export async function DELETE(
-  _: Request,
-  { params }: { params: { id: string } }
+  _req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const data = await deleteEmail(params.id);
+    const { id } = await context.params;
+
+    const data = await deleteEmail(id);
 
     return NextResponse.json({
       success: true,
